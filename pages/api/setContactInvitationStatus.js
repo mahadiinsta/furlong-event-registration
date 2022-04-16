@@ -1,0 +1,29 @@
+import axios from 'axios'
+export default async function handler(req, res) {
+  // console.log(req)
+  try {
+    const accessToken = await axios.get(process.env.ACCESSTOKEN_URL)
+    const recordId = req?.query?.recordId
+
+    const statusMap = {
+      Attendee_Status: 'Attended',
+      id: recordId,
+    }
+    const sendData = await axios.put(
+      `https://www.zohoapis.com/crm/v2/Event_Attendees/${recordId}`,
+      { data: [statusMap] },
+      {
+        headers: {
+          Authorization: accessToken.data.access_token,
+        },
+      },
+    )
+    return await res.json({
+      status: 'success',
+      message: 'Data updated successfully',
+      data: sendData?.data,
+    })
+  } catch (error) {
+    return await res.json({ status: 'error', message: error })
+  }
+}
