@@ -32,14 +32,14 @@ export default function ContactCreate({
       Account_Name: search?.Accounts?.id,
     }
     const createResp = await axios.post('/api/CreateContact', contactMap)
-    console.log(createResp.data.data.data[0].status)
-    if (createResp.data.data.data[0].status === 'success') {
+
+    if (createResp?.data?.data?.data[0].status === 'success') {
       const createAttendeeMap = {
         Name: firstName + ' ' + lastName,
         Accounts: search?.Accounts?.id,
         Event_Name: eventID,
         Attendee_Status: 'Attended',
-        Contacts: createResp.data.data.data[0].details.id,
+        Contacts: createResp?.data?.data?.data[0].details.id,
       }
       const createEventAttendeeResp = await axios.post(
         '/api/CreateEventAttendee',
@@ -50,7 +50,7 @@ export default function ContactCreate({
       handleClose()
       setLoading(false)
     }
-    if (createResp.data.data.data[0].status === 'error') {
+    if (createResp?.data?.data?.data[0]?.status === 'error') {
       alert('something wrong , please try again')
       window.location.reload(false)
     }

@@ -59,7 +59,7 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
             variant="h4"
             sx={{ mt: 5, fontWeight: 'bold' }}
           >
-            {EventNameResp[0].Name}
+            {EventNameResp !== undefined && EventNameResp[0].Name}
           </Typography>
         </Box>
         <Autocomplete
@@ -79,7 +79,7 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
             loading={loading}
             setLoading={setLoading}
             setSnackBarOpen={setSnackBarOpen}
-            eventID={EventNameResp[0].id}
+            eventID={EventNameResp !== undefined && EventNameResp[0].id}
           />
         )}
       </Box>
@@ -126,7 +126,7 @@ export async function getServerSideProps(context) {
     }
   } else {
     return {
-      props: { accounts: [] }, // will be passed to the page component as props
+      props: { accounts: [], id: null, EventNameResp: [] }, // will be passed to the page component as props
     }
   }
   // return {
