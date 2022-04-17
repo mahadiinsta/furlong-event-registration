@@ -1,12 +1,10 @@
 import axios from 'axios'
 export default async function handler(req, res) {
-  // console.log(req)
   try {
     const accessToken = await axios.get(process.env.ACCESSTOKEN_URL)
-    const accountId = req?.query?.accountId
-    console.log({ accountId })
-    const sendData = await axios.get(
-      `https://www.zohoapis.com/crm/v2/Event_Attendees/search?criteria=Accounts:equals:${accountId}`,
+    const sendData = await axios.post(
+      `https://www.zohoapis.com/crm/v2/Event_Attendees`,
+      { data: [req.body] },
       {
         headers: {
           Authorization: accessToken.data.access_token,
@@ -14,8 +12,6 @@ export default async function handler(req, res) {
       },
     )
     return await res.json({
-      status: 'success',
-      message: 'Data updated successfully',
       data: sendData?.data,
     })
   } catch (error) {

@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Link,
   Typography,
   useTheme,
 } from '@mui/material'
@@ -10,7 +9,15 @@ import axios from 'axios'
 import { useState } from 'react'
 import ContactCreate from './ContactCreate'
 
-const Contacts = ({ setSearch, contacts, loading, setLoading }) => {
+const Contacts = ({
+  search,
+  setSearch,
+  contacts,
+  loading,
+  setLoading,
+  setSnackBarOpen,
+  eventID,
+}) => {
   const theme = useTheme()
   const [selectedContact, setSelectedContact] = useState('')
   const [open, setOpen] = useState(false)
@@ -20,7 +27,8 @@ const Contacts = ({ setSearch, contacts, loading, setLoading }) => {
       '/api/setContactInvitationStatus?recordId=' + selectedContact.id,
     )
     if (relatedResp?.data?.status !== 'error') {
-      setSearch(null)
+      alert('successfully atteneded')
+      window.location.reload(false)
     } else {
       console.log(relatedResp?.data?.message)
     }
@@ -69,23 +77,30 @@ const Contacts = ({ setSearch, contacts, loading, setLoading }) => {
           </Button>
         ))
       )}
-      {console.log(contacts)}
       {open === true ? (
         <ContactCreate
+          search={search}
           open={open}
           handleClickOpen={handleClickOpen}
           handleClose={handleClose}
+          setSnackBarOpen={setSnackBarOpen}
+          eventID={eventID}
         />
       ) : null}
-      {contacts.length === 0 && (
-        <Link
-          sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}
-          href="#"
-          underline="none"
+      {contacts.length === 0 && loading !== true && (
+        <p
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            mt: 1,
+            fontSize: '18px',
+            color: theme.palette.primary.main,
+            cursor: 'pointer',
+          }}
           onClick={handleClickOpen}
         >
           Not Found? Add a Contact
-        </Link>
+        </p>
       )}
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <Button variant="contained" color="success" onClick={handleSubmit}>
@@ -97,10 +112,3 @@ const Contacts = ({ setSearch, contacts, loading, setLoading }) => {
 }
 
 export default Contacts
-
-const tempContacts = [
-  { title: 'contact 1' },
-  { title: 'contact 2' },
-  { title: 'contact 3' },
-  { title: 'contact 4' },
-]
