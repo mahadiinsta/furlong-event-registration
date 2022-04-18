@@ -87,7 +87,7 @@ const Contacts = ({
           eventID={eventID}
         />
       ) : null}
-      {contacts.length === 0 && loading !== true && (
+      {loading !== true && (
         <p
           style={{
             display: 'flex',
