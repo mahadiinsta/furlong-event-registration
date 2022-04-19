@@ -45,7 +45,6 @@ export default function ContactCreate({
         '/api/CreateEventAttendee',
         createAttendeeMap,
       )
-      console.log(createEventAttendeeResp)
       setSnackBarOpen(true)
       handleClose()
       setLoading(false)
@@ -56,6 +55,7 @@ export default function ContactCreate({
     }
     setLoading(false)
   }
+
   return (
     <Box sx={{ m: 1, display: 'flex', justifyContent: 'center' }}>
       {loading === true ? (

@@ -53,29 +53,33 @@ const Contacts = ({
         </Box>
       ) : (
         contacts.length > 0 &&
-        contacts.map((contact, index) => (
-          <Button
-            fullWidth
-            disabled={contact.Attendee_Status === 'Attended' && true}
-            variant="outlined"
-            key={index}
-            onClick={() => setSelectedContact(contact)}
-            sx={{
-              mt: 1,
-              '&:hover': {
-                color: '#fff',
-                backgroundColor: theme.palette.primary.main,
-              },
-              backgroundColor: `${
-                selectedContact.Name === contact.Name &&
-                theme.palette.primary.main
-              }`,
-              color: `${selectedContact.Name === contact.Name && '#fff'}`,
-            }}
-          >
-            {contact.Name}
-          </Button>
-        ))
+        contacts.map((contact, index) =>
+          contact.Event_Name?.id === eventID ? (
+            <Button
+              fullWidth
+              disabled={contact.Attendee_Status === 'Attended' && true}
+              variant="outlined"
+              key={index}
+              onClick={() => setSelectedContact(contact)}
+              sx={{
+                mt: 1,
+                '&:hover': {
+                  color: '#fff',
+                  backgroundColor: theme.palette.primary.main,
+                },
+                backgroundColor: `${
+                  selectedContact.Name === contact.Name &&
+                  theme.palette.primary.main
+                }`,
+                color: `${selectedContact.Name === contact.Name && '#fff'}`,
+              }}
+            >
+              {contact.Name}
+            </Button>
+          ) : (
+            ''
+          ),
+        )
       )}
       {open === true ? (
         <ContactCreate

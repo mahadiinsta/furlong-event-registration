@@ -1,6 +1,5 @@
 import axios from 'axios'
 export default async function handler(req, res) {
-  // console.log(req)
   try {
     const accessToken = await axios.get(process.env.ACCESSTOKEN_URL)
     const recordId = req?.query?.recordId
