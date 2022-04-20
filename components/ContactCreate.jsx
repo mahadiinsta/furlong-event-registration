@@ -45,15 +45,18 @@ export default function ContactCreate({
         '/api/CreateEventAttendee',
         createAttendeeMap,
       )
+      const sendData = await axios.post(
+        `/api/NewContactCount?recordId=${eventID}`,
+      )
       setSnackBarOpen(true)
       handleClose()
       setLoading(false)
+      if (createResp?.data?.data?.data[0]?.status === 'error') {
+        alert('something wrong , please try again')
+        window.location.reload(false)
+      }
+      setLoading(false)
     }
-    if (createResp?.data?.data?.data[0]?.status === 'error') {
-      alert('something wrong , please try again')
-      window.location.reload(false)
-    }
-    setLoading(false)
   }
 
   return (
@@ -83,7 +86,7 @@ export default function ContactCreate({
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleCreateContact} variant="contained">
+            <Button onClick={testContactNumber} variant="contained">
               Add Contact
             </Button>
           </DialogActions>
