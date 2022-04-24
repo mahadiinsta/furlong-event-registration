@@ -24,40 +24,6 @@ export default function ContactCreate({
   const [lastName, setLastName] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleCreateContact = async () => {
-    setLoading(true)
-    const contactMap = {
-      First_Name: firstName,
-      Last_Name: lastName,
-      Account_Name: search?.Accounts?.id,
-    }
-    const createResp = await axios.post('/api/CreateContact', contactMap)
-
-    if (createResp?.data?.data?.data[0].status === 'success') {
-      const createAttendeeMap = {
-        Name: firstName + ' ' + lastName,
-        Accounts: search?.Accounts?.id,
-        Event_Name: eventID,
-        Attendee_Status: 'Attended',
-        Contacts: createResp?.data?.data?.data[0].details.id,
-      }
-      const createEventAttendeeResp = await axios.post(
-        '/api/CreateEventAttendee',
-        createAttendeeMap,
-      )
-      const sendData = await axios.post(
-        `/api/NewContactCount?recordId=${eventID}`,
-      )
-      setSnackBarOpen(true)
-      handleClose()
-      setLoading(false)
-      if (createResp?.data?.data?.data[0]?.status === 'error') {
-        alert('something wrong , please try again')
-        window.location.reload(false)
-      }
-      setLoading(false)
-    }
-  }
 
   return (
     <Box sx={{ m: 1, display: 'flex', justifyContent: 'center' }}>

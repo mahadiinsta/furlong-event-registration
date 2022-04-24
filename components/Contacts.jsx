@@ -19,21 +19,9 @@ const Contacts = ({
   eventID,
 }) => {
   const theme = useTheme()
-  const [selectedContact, setSelectedContact] = useState('')
+
   const [open, setOpen] = useState(false)
-  const handleSubmit = async () => {
-    setLoading(true)
-    const relatedResp = await axios.get(
-      '/api/setContactInvitationStatus?recordId=' + selectedContact.id,
-    )
-    if (relatedResp?.data?.status !== 'error') {
-      alert('successfully atteneded')
-      window.location.reload(false)
-    } else {
-      console.log(relatedResp?.data?.message)
-    }
-    setLoading(false)
-  }
+
 
   const handleClickOpen = () => {
     setOpen(true)

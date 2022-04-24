@@ -30,7 +30,7 @@ const SnackAlert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
+export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) {
   const [search, setSearch] = useState(null);
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,14 +38,18 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
   const [paintingNeed, setPaintingNeed] = useState("");
   const [newContact, setNewContact] = useState(false);
   const [number, setNumber] = useState("");
+  const [firstName,setFirstName] = useState("");
+  const [lastName,setLastName] = useState("");
+  const [email, setEmail] = useState("")
+  const [selectedContact, setSelectedContact] = useState('')
 
   const handleSearch = async (account) => {
-    console.log(account);
     setLoading(true);
     setSearch(account);
-    // const relatedResp = await axios.get(
-    //   "/api/getRelatedData?accountId=" + account?.Accounts?.id
-    // );
+    const account_id = account.Invited_Accounts.id;
+    const relatedResp = await axios.get(
+      "/api/getRelatedData?accountId=" + account_id
+    );
     if (relatedResp?.data?.status !== "error") {
       setContacts(relatedResp?.data?.data?.data || []);
       setLoading(false);
@@ -56,6 +60,64 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
     setSnackBarOpen(false);
   };
 
+  const handleCreateContact = async () => {
+    const contactMap = {
+      First_Name: firstName,
+      Last_Name: lastName,
+      Email: email,
+      Phone: number,
+      Account_Name: search?.Invited_Accounts?.id,
+    }
+    const createResp = await axios.post('/api/CreateContact', contactMap)
+
+    if (createResp?.data?.data?.data[0].status === 'success') {
+      const createAttendeeMap = {
+        Name: firstName + ' ' + lastName,
+        Accounts: search?.Invited_Accounts?.id,
+        Event_Name: EventID,
+        Attendee_Status: 'Attended',
+        Contacts: createResp?.data?.data?.data[0].details.id,
+      }
+      const createEventAttendeeResp = await axios.post(
+        '/api/CreateEventAttendee',
+        createAttendeeMap,
+      )
+      console.log(createEventAttendeeResp)
+      // const sendData = await axios.post(
+      //   `/api/NewContactCount?recordId=${EventID}`,
+      // )
+      if (createResp?.data?.data?.data[0]?.status === 'error') {
+        alert('something wrong , please try again')
+        window.location.reload(false)
+      }
+    }
+  }
+
+  const handleRegister = () => {
+    if(newContact === true && firstName !== "" && lastName !== "" && number !== ""){
+      handleCreateContact();
+      
+    }else if(newContact === true && (firstName === "" || lastName === "" || number === "")){
+      alert('Please Fill All the data')
+    }
+    else{
+      handleInvite()
+    }
+  }
+
+  const handleInvite = async () => {
+    setLoading(true)
+    const relatedResp = await axios.get(
+      '/api/setContactInvitationStatus?recordId=' + selectedContact?.id,
+    )
+    if (relatedResp?.data?.status !== 'error') {
+      alert('successfully atteneded')
+      window.location.reload(false)
+    } else {
+      console.log(relatedResp?.data?.message)
+    }
+    setLoading(false)
+  }
   return (
     <Box>
       <AppBar position="static">
@@ -80,7 +142,7 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
             variant="h6"
             sx={{ mt: 5, fontWeight: "bold" }}
           >
-            Event Name: {EventNameResp !== undefined && EventNameResp[0].Name}
+            Event Name: {EventNameResp !== undefined && EventNameResp[0].Event_Name}
           </Typography>
         </Box>
         <label style={{ fontWeight: 500 }}>School Name</label>
@@ -89,7 +151,7 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
           disablePortal
           onChange={(e, v) => (v !== null ? handleSearch(v) : setSearch(null))}
           options={accounts}
-          getOptionLabel={(option) => option.name}
+          getOptionLabel={(option) => option.Invited_Accounts.name}
           renderInput={(params) => (
             <TextField {...params} fullWidth placeholder="-Select-" />
           )}
@@ -98,6 +160,7 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
         <Autocomplete
           sx={{ mt: 1 }}
           disablePortal
+          onChange={(e, v) => (v !== null && setSelectedContact(v))}
           options={contacts}
           getOptionLabel={(option) => option.Contacts.name}
           renderInput={(params) => (
@@ -119,18 +182,19 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
             <Box>
               <label style={{ fontWeight: 500 }}>First Name</label>
               <br />
-              <TextField fullWidth sx={{ mt: 1, mb: 1 }} />
+              <TextField fullWidth sx={{ mt: 1, mb: 1 }} onBlur={(e) => setFirstName(e.target.value)} />
             </Box>
             <Box>
               <label style={{ fontWeight: 500 }}>Last Name</label>
               <br />
-              <TextField fullWidth sx={{ mt: 1, mb: 1 }} />
+              <TextField fullWidth sx={{ mt: 1, mb: 1 }}  onBlur={(e) => setLastName(e.target.value)} />
             </Box>
             <Box>
               <label style={{ fontWeight: 500 }}>Email</label>
               <br />
               <TextField
                 sx={{ mt: 1, mb: 1 }}
+                onBlur={(e) => setEmail(e.target.value)}
                 fullWidth
                 endAdornment={
                   <InputAdornment position="end">
@@ -152,25 +216,32 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
             </Box>
           </Box>
         )}
-        {console.log(number)}
         <br />
         <label style={{ fontWeight: 500 }}>
           Does your school have a painting need that you would like to discuss
           or have quoted?
         </label>
-        <FormControl fullWidth sx={{ mt: 1, mb: 1 }}>
-          <InputLabel>-Select-</InputLabel>
-          <Select
-            fullWidth
-            value={paintingNeed}
-            // label="Age"
-            onChange={(e) => setPaintingNeed(e.target.value)}
-          >
-            <MenuItem value="Yes">Yes</MenuItem>
-            <MenuItem value="No">No</MenuItem>
-            <MenuItem value="Unsure">Unsure(But Open To conversation)</MenuItem>
-          </Select>
-        </FormControl>
+        <TextField
+          select
+          sx={{mt: 2, mb: 1}}
+          fullWidth
+          shrink={true}
+          notched
+          // label="Select"
+          placeholder="combo-box"
+          value={paintingNeed}
+          onChange={(e) => setPaintingNeed(e.target.value)}
+        >
+          {[
+            {label: 'Yes', value: 'Yes'},
+            {label: 'No', value: 'No'},
+            {label: 'Unsure(But Open To conversation)', value: 'Unsure(But Open To conversation)'},
+          ].map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
         <label style={{ fontWeight: 500 }}>Contact</label>
         <TextField sx={{ mt: 1, mb: 3 }} multiline fullWidth rows={4} />
         <em style={{ fontWeight: 500 }}>
@@ -179,7 +250,7 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
         </em>
       </Box>
       <Box sx={{display: 'flex', juistifyContent: 'center'}}>
-      <Button variant="contained" align="center" sx={{margin: '-10px auto 5px auto '}}>Register</Button>
+      <Button variant="contained" align="center" sx={{margin: '-10px auto 5px auto '}} onClick={handleRegister}>Register</Button>
       </Box>
       {/* <Snackbar
         open={snackbarOpen}
@@ -194,43 +265,43 @@ export default function EventsAndSeminars({ accounts, id, EventNameResp }) {
   );
 }
 
-// export async function getServerSideProps(context) {
-//   const accessToken = await axios.get(process.env.ACCESSTOKEN_URL);
-//   const id = context.params.id;
-//   const eventsResp = await axios.get(
-//     `https://www.zohoapis.com/crm/v2/OSHE/${id}/Accounts112`,
-//     {
-//       headers: {
-//         Authorization: accessToken.data.access_token,
-//       },
-//     }
-//   );
-//   const EventNameResp = await axios.get(
-//     `https://www.zohoapis.com/crm/v2/OSHE/${id}`,
-//     {
-//       headers: {
-//         Authorization: accessToken.data.access_token,
-//       },
-//     }
-//   );
+export async function getServerSideProps(context) {
+  const accessToken = await axios.get(process.env.ACCESSTOKEN_URL);
+  const id = context.params.id;
+  const eventsResp = await axios.get(
+    `https://www.zohoapis.com/crm/v2/OHS_Event/${id}/Accounts12`,
+    {
+      headers: {
+        Authorization: accessToken.data.access_token,
+      },
+    }
+  );
+  const EventNameResp = await axios.get(
+    `https://www.zohoapis.com/crm/v2/OHS_Event/${id}`,
+    {
+      headers: {
+        Authorization: accessToken.data.access_token,
+      },
+    }
+  );
 
-//   if (!!eventsResp?.data?.data) {
-//     return {
-//       props: {
-//         accounts: eventsResp.data.data,
-//         id: id,
-//         EventNameResp: EventNameResp.data.data,
-//       }, // will be passed to the page component as props
-//     };
-//   } else {
-//     return {
-//       props: { accounts: [], id: null, EventNameResp: [] }, // will be passed to the page component as props
-//     };
-//   }
-//   // return {
-//   //   props: { session },
-//   // };
-// }
+  if (!!eventsResp?.data?.data) {
+    return {
+      props: {
+        accounts: eventsResp.data.data,
+        EventID: id,
+        EventNameResp: EventNameResp.data.data,
+      }, // will be passed to the page component as props
+    };
+  } else {
+    return {
+      props: { accounts: [], EventID: null, EventNameResp: [] }, // will be passed to the page component as props
+    };
+  }
+  // return {
+  //   props: { session },
+  // };
+}
 
 
 const accounts = [
