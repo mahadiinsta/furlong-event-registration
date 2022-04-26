@@ -120,7 +120,6 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
   }
   return (
     <Box>
-      <Button onClick={handleInvite}>Test</Button>
       <AppBar position="static">
         <Typography variant="h6" align="center" sx={{ pt: 2, pb: 2 }}>
           Event Registration
