@@ -81,6 +81,7 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
         Attendee_Status: 'Attended',
         Attendee_Title: title,
         Note: note,
+        Painting_Needs: paintingNeed,
         Contacts: createResp?.data?.data?.data[0].details.id,
       }
       const createEventAttendeeResp = await axios.post(
@@ -110,7 +111,7 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
   }
 
   const handleInvite = async () => {
-    const relatedResp = await axios.post('/api/setContactInvitationStatus?recordId=' + selectedContact?.id, {Note: note})
+    const relatedResp = await axios.post('/api/setContactInvitationStatus?recordId=' + selectedContact?.id, {Note: note,Painting_Needs: paintingNeed})
     if (relatedResp?.data?.status !== 'error') {
       alert('successfully atteneded')
       window.location.reload(false)
@@ -118,6 +119,7 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
       console.log(relatedResp?.data?.message)
     }
   }
+
   return (
     <Box>
       <AppBar position="static">
@@ -214,7 +216,7 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
               <label style={{ fontWeight: 500, marginBottom: 5 }}>Phone</label>
               <br />
               <PhoneInput
-                country={"us"}
+                country={"au"}
                 value={number}
                 onChange={(phone) => setNumber(phone)}
               />

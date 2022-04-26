@@ -7,7 +7,8 @@ export default async function handler(req, res) {
     const statusMap = {
       Attendee_Status: 'Attended',
       id: recordId,
-      Note: req.body.Note
+      Note: req.body.Note,
+      Painting_Needs: req.body.Painting_Needs
     }
     const sendData = await axios.put(
       `https://www.zohoapis.com/crm/v2/Event_Attendees/${recordId}`,
