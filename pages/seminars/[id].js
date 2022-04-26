@@ -41,6 +41,8 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
   const [firstName,setFirstName] = useState("");
   const [lastName,setLastName] = useState("");
   const [email, setEmail] = useState("")
+  const [title,setTitle] = useState("");
+  const [note,setNote] = useState("");
   const [selectedContact, setSelectedContact] = useState('')
 
   const handleSearch = async (account) => {
@@ -66,6 +68,7 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
       Last_Name: lastName,
       Email: email,
       Phone: number,
+      Title: title,
       Account_Name: search?.Invited_Accounts?.id,
     }
     const createResp = await axios.post('/api/CreateContact', contactMap)
@@ -76,16 +79,17 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
         Accounts: search?.Invited_Accounts?.id,
         Event_Name: EventID,
         Attendee_Status: 'Attended',
+        Attendee_Title: title,
+        Note: note,
         Contacts: createResp?.data?.data?.data[0].details.id,
       }
       const createEventAttendeeResp = await axios.post(
         '/api/CreateEventAttendee',
         createAttendeeMap,
       )
-      console.log(createEventAttendeeResp)
-      // const sendData = await axios.post(
-      //   `/api/NewContactCount?recordId=${EventID}`,
-      // )
+      const sendData = await axios.post(
+        `/api/NewContactCount?recordId=${EventID}`,
+      )
       if (createResp?.data?.data?.data[0]?.status === 'error') {
         alert('something wrong , please try again')
         window.location.reload(false)
@@ -106,20 +110,17 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
   }
 
   const handleInvite = async () => {
-    setLoading(true)
-    const relatedResp = await axios.get(
-      '/api/setContactInvitationStatus?recordId=' + selectedContact?.id,
-    )
+    const relatedResp = await axios.post('/api/setContactInvitationStatus?recordId=' + selectedContact?.id, {Note: note})
     if (relatedResp?.data?.status !== 'error') {
       alert('successfully atteneded')
       window.location.reload(false)
     } else {
       console.log(relatedResp?.data?.message)
     }
-    setLoading(false)
   }
   return (
     <Box>
+      <Button onClick={handleInvite}>Test</Button>
       <AppBar position="static">
         <Typography variant="h6" align="center" sx={{ pt: 2, pb: 2 }}>
           Event Registration
@@ -190,6 +191,11 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
               <TextField fullWidth sx={{ mt: 1, mb: 1 }}  onBlur={(e) => setLastName(e.target.value)} />
             </Box>
             <Box>
+              <label style={{ fontWeight: 500 }}>Title</label>
+              <br />
+              <TextField fullWidth sx={{ mt: 1, mb: 1 }}  onBlur={(e) => setTitle(e.target.value)} />
+            </Box>
+            <Box>
               <label style={{ fontWeight: 500 }}>Email</label>
               <br />
               <TextField
@@ -242,8 +248,8 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
             </MenuItem>
           ))}
         </TextField>
-        <label style={{ fontWeight: 500 }}>Contact</label>
-        <TextField sx={{ mt: 1, mb: 3 }} multiline fullWidth rows={4} />
+        <label style={{ fontWeight: 500 }}>Note</label>
+        <TextField sx={{ mt: 1, mb: 3 }} multiline fullWidth rows={4} onChange={(e) => setNote(e.target.value)} />
         <em style={{ fontWeight: 500 }}>
           Thank you for taking the time to stop and chat, we will be in contact
           soon!

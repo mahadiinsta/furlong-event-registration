@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const recordId = req?.query?.recordId
 
     const getData = await axios.get(
-      `https://www.zohoapis.com/crm/v2/OSHE/${recordId}`,
+      `https://www.zohoapis.com/crm/v2/OHS_Event/${recordId}`,
       {
         headers: {
           Authorization: accessToken.data.access_token,
