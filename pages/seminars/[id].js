@@ -9,6 +9,7 @@ import {
   IconButton,
   InputAdornment,
   InputLabel,
+  Link,
   MenuItem,
   Select,
   Snackbar,
@@ -23,14 +24,20 @@ import { useState } from "react";
 import Contacts from "../../components/Contacts";
 import logo from "../../public/Furlong_newLogo_medium 1.jpg";
 import EmailIcon from "@mui/icons-material/Email";
-import 'react-phone-input-2/lib/style.css'
+import "react-phone-input-2/lib/style.css";
 import PhoneInput from "react-phone-input-2";
+import { Controller, useForm } from "react-hook-form";
+import MuiPhoneNumber from "mui-phone-number";
 
 const SnackAlert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) {
+export default function EventsAndSeminars({
+  accounts,
+  EventID,
+  EventNameResp,
+}) {
   const [search, setSearch] = useState(null);
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,12 +45,22 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
   const [paintingNeed, setPaintingNeed] = useState("");
   const [newContact, setNewContact] = useState(false);
   const [number, setNumber] = useState("");
-  const [firstName,setFirstName] = useState("");
-  const [lastName,setLastName] = useState("");
-  const [email, setEmail] = useState("")
-  const [title,setTitle] = useState("");
-  const [note,setNote] = useState("");
-  const [selectedContact, setSelectedContact] = useState('')
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [title, setTitle] = useState("");
+  const [note, setNote] = useState("");
+  const [selectedContact, setSelectedContact] = useState("");
+
+  //for account
+  const [newAccount, setNewAccount] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
+  const [accountPhone, setAccountPhone] = useState("");
+  const [accountState, setAccountState] = useState("");
+  const [accountCity, setAccountCity] = useState("");
+  const [accountStreet, setAccountStreet] = useState("");
+  const [accountZip, setAccountZip] = useState("");
 
   const handleSearch = async (account) => {
     setLoading(true);
@@ -62,66 +79,110 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
     setSnackBarOpen(false);
   };
 
-  const handleCreateContact = async () => {
+  const handleCreateContact = async (account_id) => {
     const contactMap = {
       First_Name: firstName,
       Last_Name: lastName,
       Email: email,
       Phone: number,
       Title: title,
-      Account_Name: search?.Invited_Accounts?.id,
-    }
-    const createResp = await axios.post('/api/CreateContact', contactMap)
+      Account_Name:
+        newAccount === true ? account_id : search?.Invited_Accounts?.id,
+    };
+    const createResp = await axios.post("/api/CreateContact", contactMap);
 
-    if (createResp?.data?.data?.data[0].status === 'success') {
+    if (createResp?.data?.data?.data[0].status === "success") {
       const createAttendeeMap = {
-        Name: firstName + ' ' + lastName,
-        Accounts: search?.Invited_Accounts?.id,
+        Name: firstName + " " + lastName,
+        Accounts:
+          newAccount === true ? account_id : search?.Invited_Accounts?.id,
         Event_Name: EventID,
-        Attendee_Status: 'Attended',
+        Attendee_Status: "Attended",
         Attendee_Title: title,
         Note: note,
         Painting_Needs: paintingNeed,
         Contacts: createResp?.data?.data?.data[0].details.id,
-      }
+      };
       const createEventAttendeeResp = await axios.post(
-        '/api/CreateEventAttendee',
-        createAttendeeMap,
-      )
+        "/api/CreateEventAttendee",
+        createAttendeeMap
+      );
       const sendData = await axios.post(
-        `/api/NewContactCount?recordId=${EventID}`,
-      )
-      if (createResp?.data?.data?.data[0]?.status === 'error') {
-        alert('something wrong , please try again')
-        window.location.reload(false)
-      }
+        `/api/NewContactCount?recordId=${EventID}`
+      );
+      return createResp?.data?.data?.data[0].status;
     }
-  }
 
-  const handleRegister = () => {
-    if(newContact === true && firstName !== "" && lastName !== "" && number !== ""){
+    if (createResp?.data?.data?.data[0]?.status === "error") {
+      alert("something wrong , please try again");
+      window.location.reload(false);
+    }
+  };
+
+  const handleCreateAccount = async () => {
+    const accountMap = {
+      EventID: EventID,
+      Account_Name: accountName,
+    };
+    const accountCreateResp = await axios.post(
+      "/api/CreateAccount",
+      accountMap
+    );
+
+    if (accountCreateResp?.data?.data?.data[0].status === "success") {
+      const contactCreateResp = handleCreateContact(
+        accountCreateResp.data?.data?.data[0].details.id
+      );
+      console.log({ contactCreateResp });
+    }
+  };
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    if (
+      newContact === true &&
+      newAccount !== true &&
+      firstName !== "" &&
+      lastName !== "" &&
+      number !== ""
+    ) {
+      console.log("create contact");
       handleCreateContact();
-      
-    }else if(newContact === true && (firstName === "" || lastName === "" || number === "")){
-      alert('Please Fill All the data')
+    } else if (
+      newContact === true &&
+      (firstName === "" || lastName === "" || number === "")
+    ) {
+      alert("Please Fill All the data");
+    } else if (
+      newAccount === true &&
+      newContact !== true &&
+      (firstName !== "" || lastName !== "" || number !== "")
+    ) {
+      console.log("Creating account");
+      handleCreateAccount();
+    } else {
+      console.log("handle event");
+      handleInvite();
     }
-    else{
-      handleInvite()
-    }
-  }
+
+  };
 
   const handleInvite = async () => {
-    const relatedResp = await axios.post('/api/setContactInvitationStatus?recordId=' + selectedContact?.id, {Note: note,Painting_Needs: paintingNeed})
-    if (relatedResp?.data?.status !== 'error') {
-      alert('successfully atteneded')
-      window.location.reload(false)
+    const relatedResp = await axios.post(
+      "/api/setContactInvitationStatus?recordId=" + selectedContact?.id,
+      { Note: note, Painting_Needs: paintingNeed }
+    );
+    if (relatedResp?.data?.status !== "error") {
+      alert("successfully atteneded");
+      window.location.reload(false);
     } else {
-      console.log(relatedResp?.data?.message)
+      window.location.reload(false);
     }
-  }
+  };
 
   return (
-    <Box>
+    <Box component="form">
+      {console.log("newAccount", newAccount, ", : New Contact", newContact)}
       <AppBar position="static">
         <Typography variant="h6" align="center" sx={{ pt: 2, pb: 2 }}>
           Event Registration
@@ -144,57 +205,132 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
             variant="h6"
             sx={{ mt: 5, fontWeight: "bold" }}
           >
-            Event Name: {EventNameResp !== undefined && EventNameResp[0].Event_Name}
+            Event Name:{" "}
+            {EventNameResp !== undefined && EventNameResp[0].Event_Name}
           </Typography>
         </Box>
-        <label style={{ fontWeight: 500 }}>School Name</label>
-        <Autocomplete
-          sx={{ mt: 1, mb: 1 }}
-          disablePortal
-          onChange={(e, v) => (v !== null ? handleSearch(v) : setSearch(null))}
-          options={accounts}
-          getOptionLabel={(option) => option.Invited_Accounts.name}
-          renderInput={(params) => (
-            <TextField {...params} fullWidth placeholder="-Select-" />
-          )}
-        />
-        <label style={{ fontWeight: 500 }}>Contact</label>
-        <Autocomplete
-          sx={{ mt: 1 }}
-          disablePortal
-          onChange={(e, v) => (v !== null && setSelectedContact(v))}
-          options={contacts}
-          getOptionLabel={(option) => option.Contacts.name}
-          renderInput={(params) => (
-            <TextField {...params} fullWidth placeholder="-Select-" />
-          )}
-        />
+        {newAccount === false ? (
+          <>
+            {" "}
+            <label style={{ fontWeight: 500 }}>School Name</label>
+            <Autocomplete
+              sx={{ mt: 1, mb: 1 }}
+              disablePortal
+              onChange={(e, v) =>
+                v !== null ? handleSearch(v) : setSearch(null)
+              }
+              options={accounts}
+              getOptionLabel={(option) => option.Invited_Accounts.name}
+              renderInput={(params) => (
+                <TextField {...params} fullWidth placeholder="-Select-" />
+              )}
+            />
+          </>
+        ) : (
+          ""
+        )}
         <FormControlLabel
           sx={{ mt: 1, mb: 1 }}
           control={
             <Checkbox
               size="small"
-              onChange={() => setNewContact(!newContact)}
+              onChange={() => setNewAccount(!newAccount)}
             />
           }
-          label="New Contact"
+          label="New Acount"
         />
-        {newContact === true && (
+
+        {newAccount === true ? (
           <Box>
+            <Box sx={{ pb: 1 }}>
+              <label
+                style={{ fontWeight: 600, fontSize: 26, color: "#1565C0" }}
+              >
+                Account
+              </label>
+            </Box>
+            <label style={{ fontWeight: 500 }}>School Name</label>
+            <br />
+            <TextField
+              fullWidth
+              sx={{ mt: 1, mb: 1 }}
+              onBlur={(e) => setAccountName(e.target.value)}
+              required
+            />
+          </Box>
+        ) : (
+          ""
+        )}
+
+        {newAccount === false ? (
+          <>
+            <br />
+
+            {newContact === false && (
+              <Autocomplete
+                sx={{ mt: 1 }}
+                disablePortal
+                onChange={(e, v) => v !== null && setSelectedContact(v)}
+                options={contacts}
+                getOptionLabel={(option) => option.Contacts.name + " - "}
+                renderInput={(params) => (
+                  <TextField {...params} fullWidth placeholder="-Select-" />
+                )}
+              />
+            )}
+            <FormControlLabel
+              sx={{ mt: 1, mb: 1 }}
+              control={
+                <Checkbox
+                  size="small"
+                  onChange={() => setNewContact(!newContact)}
+                />
+              }
+              label="New Contact"
+            />
+          </>
+        ) : (
+          ""
+        )}
+        {newContact === true || newAccount == true ? (
+          <Box>
+            {newAccount == true && (
+              <Box sx={{ pb: 1 }}>
+                <label
+                  style={{ fontWeight: 600, fontSize: 26, color: "#1565C0" }}
+                >
+                  Contact
+                </label>
+              </Box>
+            )}
             <Box>
               <label style={{ fontWeight: 500 }}>First Name</label>
               <br />
-              <TextField fullWidth sx={{ mt: 1, mb: 1 }} onBlur={(e) => setFirstName(e.target.value)} />
+              <TextField
+                fullWidth
+                sx={{ mt: 1, mb: 1 }}
+                onBlur={(e) => setFirstName(e.target.value)}
+                required
+              />
             </Box>
             <Box>
               <label style={{ fontWeight: 500 }}>Last Name</label>
               <br />
-              <TextField fullWidth sx={{ mt: 1, mb: 1 }}  onBlur={(e) => setLastName(e.target.value)} />
+              <TextField
+                fullWidth
+                sx={{ mt: 1, mb: 1 }}
+                onBlur={(e) => setLastName(e.target.value)}
+                required
+              />
             </Box>
             <Box>
               <label style={{ fontWeight: 500 }}>Title</label>
               <br />
-              <TextField fullWidth sx={{ mt: 1, mb: 1 }}  onBlur={(e) => setTitle(e.target.value)} />
+              <TextField
+                fullWidth
+                sx={{ mt: 1, mb: 1 }}
+                onBlur={(e) => setTitle(e.target.value)}
+              />
             </Box>
             <Box>
               <label style={{ fontWeight: 500 }}>Email</label>
@@ -203,6 +339,7 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
                 sx={{ mt: 1, mb: 1 }}
                 onBlur={(e) => setEmail(e.target.value)}
                 fullWidth
+                required
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton edge="end">
@@ -222,6 +359,8 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
               />
             </Box>
           </Box>
+        ) : (
+          ""
         )}
         <br />
         <label style={{ fontWeight: 500 }}>
@@ -230,7 +369,7 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
         </label>
         <TextField
           select
-          sx={{mt: 2, mb: 1}}
+          sx={{ mt: 2, mb: 1 }}
           fullWidth
           shrink={true}
           notched
@@ -240,9 +379,12 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
           onChange={(e) => setPaintingNeed(e.target.value)}
         >
           {[
-            {label: 'Yes', value: 'Yes'},
-            {label: 'No', value: 'No'},
-            {label: 'Unsure(But Open To conversation)', value: 'Unsure(But Open To conversation)'},
+            { label: "Yes", value: "Yes" },
+            { label: "No", value: "No" },
+            {
+              label: "Unsure(But Open To conversation)",
+              value: "Unsure(But Open To conversation)",
+            },
           ].map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
@@ -250,14 +392,36 @@ export default function EventsAndSeminars({ accounts, EventID, EventNameResp }) 
           ))}
         </TextField>
         <label style={{ fontWeight: 500 }}>Note</label>
-        <TextField sx={{ mt: 1, mb: 3 }} multiline fullWidth rows={4} onChange={(e) => setNote(e.target.value)} />
+        <TextField
+          sx={{ mt: 1, mb: 3 }}
+          multiline
+          fullWidth
+          rows={4}
+          onChange={(e) => setNote(e.target.value)}
+        />
         <em style={{ fontWeight: 500 }}>
           Thank you for taking the time to stop and chat, we will be in contact
           soon!
         </em>
-      </Box>
-      <Box sx={{display: 'flex', juistifyContent: 'center'}}>
-      <Button variant="contained" align="center" sx={{margin: '-10px auto 5px auto '}} onClick={handleRegister}>Register</Button>
+        <Box sx={{ display: "flex", juistifyContent: "center",alignItems:"center" }}>
+          <Button
+            variant="contained"
+            align="center"
+            sx={{ margin: "20px auto 5px auto " }}
+            onClick={(e) => handleRegister(e)}
+            type="submit"
+          >
+            Register
+          </Button>
+
+          <Link
+            href="https://tonybruce-furlongpainting.zohobookings.com/#/customer/4396739000000147014"
+            color="primary"
+            target="_blank"
+          >
+            Book a Meeting with Luke
+          </Link>
+        </Box>
       </Box>
       {/* <Snackbar
         open={snackbarOpen}
@@ -309,9 +473,3 @@ export async function getServerSideProps(context) {
   //   props: { session },
   // };
 }
-
-
-const accounts = [
-  {name: "tony", age: 35},
-  {name: "rony", age: 25},
-]
