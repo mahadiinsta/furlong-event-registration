@@ -206,7 +206,7 @@ export default function EventsAndSeminars({
             sx={{ mt: 5, fontWeight: "bold" }}
           >
             Event Name:{" "}
-            {EventNameResp !== undefined && EventNameResp[0].Event_Name}
+            {EventNameResp !== undefined && EventNameResp[0]?.Event_Name}
           </Typography>
         </Box>
         {newAccount === false ? (
