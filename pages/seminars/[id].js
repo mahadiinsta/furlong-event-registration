@@ -53,14 +53,10 @@ export default function EventsAndSeminars({
   const [selectedContact, setSelectedContact] = useState("");
 
   //for account
-  const [newAccount, setNewAccount] = useState(false);
+  let [newAccount, setNewAccount] = useState(false);
   const [accountName, setAccountName] = useState("");
-  const [accountEmail, setAccountEmail] = useState("");
-  const [accountPhone, setAccountPhone] = useState("");
-  const [accountState, setAccountState] = useState("");
-  const [accountCity, setAccountCity] = useState("");
-  const [accountStreet, setAccountStreet] = useState("");
-  const [accountZip, setAccountZip] = useState("");
+
+  const [editContact, setEditContact] = useState(false);
 
   const handleSearch = async (account) => {
     setLoading(true);
@@ -133,7 +129,6 @@ export default function EventsAndSeminars({
       const contactCreateResp = handleCreateContact(
         accountCreateResp.data?.data?.data[0].details.id
       );
-      console.log({ contactCreateResp });
     }
   };
 
@@ -146,7 +141,6 @@ export default function EventsAndSeminars({
       lastName !== "" &&
       number !== ""
     ) {
-      console.log("create contact");
       handleCreateContact();
     } else if (
       newContact === true &&
@@ -158,13 +152,10 @@ export default function EventsAndSeminars({
       newContact !== true &&
       (firstName !== "" || lastName !== "" || number !== "")
     ) {
-      console.log("Creating account");
       handleCreateAccount();
     } else {
-      console.log("handle event");
       handleInvite();
     }
-
   };
 
   const handleInvite = async () => {
@@ -182,7 +173,6 @@ export default function EventsAndSeminars({
 
   return (
     <Box component="form">
-      {console.log("newAccount", newAccount, ", : New Contact", newContact)}
       <AppBar position="static">
         <Typography variant="h6" align="center" sx={{ pt: 2, pb: 2 }}>
           Event Registration
@@ -237,7 +227,7 @@ export default function EventsAndSeminars({
               onChange={() => setNewAccount(!newAccount)}
             />
           }
-          label="New Acount"
+          label="Add School Name"
         />
 
         {newAccount === true ? (
@@ -267,16 +257,47 @@ export default function EventsAndSeminars({
             <br />
 
             {newContact === false && (
-              <Autocomplete
-                sx={{ mt: 1 }}
-                disablePortal
-                onChange={(e, v) => v !== null && setSelectedContact(v)}
-                options={contacts}
-                getOptionLabel={(option) => option.Contacts.name + " - "}
-                renderInput={(params) => (
-                  <TextField {...params} fullWidth placeholder="-Select-" />
-                )}
-              />
+              <>
+                {" "}
+                <Box
+                  sx={{
+                    display: "flex",
+                    width: "100%",
+                    justifyContent: "space-around",
+                    alignItems: "center",
+                  }}
+                >
+                  <Autocomplete
+                    sx={{
+                      mt: 1,
+                      width:"100%"
+                      // width: `${selectedContact === "" ? "100%" : "80%"}`,
+                    }}
+                    disablePortal
+                    onChange={(e, v) => v !== null && setSelectedContact(v)}
+                    options={contacts}
+                    getOptionLabel={(option) => option.Contacts.name}
+                    renderInput={(params) => (
+                      <TextField {...params} fullWidth placeholder="-Select-" />
+                    )}
+                  />
+                  {/* {selectedContact !== "" ? (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      sx={{ width: "120px", height: "40px" }}
+                      onClick={() => setEditContact(true)}
+                    >
+                      Edit
+                    </Button>
+                  ) : (
+                    ""
+                  )} */}
+                </Box>
+                {/* <Box>{editContact === true ? <Box>
+                  
+                </Box> : <></>}</Box> */}
+              </>
             )}
             <FormControlLabel
               sx={{ mt: 1, mb: 1 }}
@@ -286,7 +307,7 @@ export default function EventsAndSeminars({
                   onChange={() => setNewContact(!newContact)}
                 />
               }
-              label="New Contact"
+              label="Add New Contact"
             />
           </>
         ) : (
@@ -403,7 +424,13 @@ export default function EventsAndSeminars({
           Thank you for taking the time to stop and chat, we will be in contact
           soon!
         </em>
-        <Box sx={{ display: "flex", juistifyContent: "center",alignItems:"center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            juistifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Button
             variant="contained"
             align="center"
@@ -457,16 +484,26 @@ export async function getServerSideProps(context) {
   );
 
   if (!!eventsResp?.data?.data) {
+    const accounts = eventsResp.data.data;
+
+    const strAscending = [...accounts].sort((a, b) =>
+      a.Invited_Accounts.name > b.Invited_Accounts.name ? 1 : -1
+    );
+    console.log({ strAscending });
     return {
       props: {
-        accounts: eventsResp.data.data,
+        accounts: strAscending,
         EventID: id,
         EventNameResp: EventNameResp.data.data,
       }, // will be passed to the page component as props
     };
   } else {
     return {
-      props: { accounts: [], EventID: null, EventNameResp: [] }, // will be passed to the page component as props
+      props: {
+        accounts: [],
+        EventID: null,
+        EventNameResp: EventNameResp.data.data,
+      }, // will be passed to the page component as props
     };
   }
   // return {
