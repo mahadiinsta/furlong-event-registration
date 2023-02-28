@@ -58,6 +58,9 @@ export default function EventsAndSeminars({
 
   const [editContact, setEditContact] = useState(false);
 
+
+  //Getting Contacts for Each School
+
   const handleSearch = async (account) => {
     setLoading(true);
     setSearch(account);
@@ -65,12 +68,18 @@ export default function EventsAndSeminars({
     const relatedResp = await axios.get(
       "/api/getRelatedData?accountId=" + account_id
     );
-    if (relatedResp?.data?.status !== "error") {
-      setContacts(relatedResp?.data?.data?.data || []);
+    if (relatedResp?.data?.status !== "error" && relatedResp?.data?.data?.data.length > 0) {
+      const key = 'Name';
+      const arrayUniqueByKey = [...new Map(relatedResp?.data?.data?.data.map(item =>
+        [item[key], item])).values()];
+        console.log({arrayUniqueByKey})
+      setContacts(arrayUniqueByKey || []);
       setLoading(false);
     }
     setLoading(false);
   };
+
+
   const handleSnackbarClose = () => {
     setSnackBarOpen(false);
   };
@@ -276,7 +285,7 @@ export default function EventsAndSeminars({
                     disablePortal
                     onChange={(e, v) => v !== null && setSelectedContact(v)}
                     options={contacts}
-                    getOptionLabel={(option) => option.Contacts.name}
+                    getOptionLabel={(option) => option?.Contacts?.name}
                     renderInput={(params) => (
                       <TextField {...params} fullWidth placeholder="-Select-" />
                     )}
@@ -489,7 +498,6 @@ export async function getServerSideProps(context) {
     const strAscending = [...accounts].sort((a, b) =>
       a.Invited_Accounts.name > b.Invited_Accounts.name ? 1 : -1
     );
-    console.log({ strAscending });
     return {
       props: {
         accounts: strAscending,
