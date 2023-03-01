@@ -168,6 +168,8 @@ export default function EventsAndSeminars({
       accountMap
     );
 
+    alert(accountCreateResp?.data?.data?.data[0].status)
+
     if (accountCreateResp?.data?.data?.data[0].status === "success") {
       const contactCreateResp = handleCreateContact(
         accountCreateResp.data?.data?.data[0].details.id
@@ -217,10 +219,6 @@ export default function EventsAndSeminars({
       window.location.reload(false);
     }
   };
-
-  if (loading === true) {
-    return <Box>Loading..............</Box>;
-  }
 
   return (
     <Box component="form">
