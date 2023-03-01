@@ -28,6 +28,9 @@ import "react-phone-input-2/lib/style.css";
 import PhoneInput from "react-phone-input-2";
 import { Controller, useForm } from "react-hook-form";
 import MuiPhoneNumber from "mui-phone-number";
+import ContactUpdate from "../../components/ContactUpdate";
+import { useRouter } from 'next/router'
+import InviteSuccessPage from "../../components/InviteSuccessPage";
 
 const SnackAlert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -52,11 +55,32 @@ export default function EventsAndSeminars({
   const [note, setNote] = useState("");
   const [selectedContact, setSelectedContact] = useState("");
 
+  const router = useRouter()
+
+  const { id } = router.query;
+  
+  const eventId = id;
+
   //for account
   let [newAccount, setNewAccount] = useState(false);
   const [accountName, setAccountName] = useState("");
 
   const [editContact, setEditContact] = useState(false);
+
+      //contact update states
+      const [open, setOpen] = React.useState(false);
+  
+      const handleClickOpen = () => {
+        setOpen(true);
+      };
+    
+      const handleClose = () => {
+        setOpen(false);
+      };
+
+// Invite Successful
+
+const [openThankYou, setOpenThankYou] = React.useState(false);
 
 
   //Getting Contacts for Each School
@@ -101,7 +125,7 @@ export default function EventsAndSeminars({
         Name: firstName + " " + lastName,
         Accounts:
           newAccount === true ? account_id : search?.Invited_Accounts?.id,
-        Event_Name: EventID,
+        Event_Name: eventId,
         Attendee_Status: "Attended",
         Attendee_Title: title,
         Note: note,
@@ -113,7 +137,7 @@ export default function EventsAndSeminars({
         createAttendeeMap
       );
       const sendData = await axios.post(
-        `/api/NewContactCount?recordId=${EventID}`
+        `/api/NewContactCount?recordId=${eventId}`
       );
       return createResp?.data?.data?.data[0].status;
     }
@@ -124,9 +148,11 @@ export default function EventsAndSeminars({
     }
   };
 
+
+
   const handleCreateAccount = async () => {
     const accountMap = {
-      EventID: EventID,
+      EventID: eventId,
       Account_Name: accountName,
     };
     const accountCreateResp = await axios.post(
@@ -138,6 +164,9 @@ export default function EventsAndSeminars({
       const contactCreateResp = handleCreateContact(
         accountCreateResp.data?.data?.data[0].details.id
       );
+    }else{
+      alert("Something went wrong");
+      window.location.reload(false);
     }
   };
 
@@ -150,7 +179,12 @@ export default function EventsAndSeminars({
       lastName !== "" &&
       number !== ""
     ) {
-      handleCreateContact();
+    const createResp = handleCreateContact();
+    if(createResp === "success"){
+      handleInvite();
+    }else{
+      alert("Something is wrong");
+    }
     } else if (
       newContact === true &&
       (firstName === "" || lastName === "" || number === "")
@@ -159,7 +193,7 @@ export default function EventsAndSeminars({
     } else if (
       newAccount === true &&
       newContact !== true &&
-      (firstName !== "" || lastName !== "" || number !== "")
+      (firstName !== "" || lastName !== "")
     ) {
       handleCreateAccount();
     } else {
@@ -174,8 +208,9 @@ export default function EventsAndSeminars({
     );
     if (relatedResp?.data?.status !== "error") {
       alert("successfully atteneded");
-      window.location.reload(false);
+      setOpenThankYou(true)
     } else {
+      alert("Something is wrong with the details! Please try again");
       window.location.reload(false);
     }
   };
@@ -274,6 +309,7 @@ export default function EventsAndSeminars({
                     width: "100%",
                     justifyContent: "space-around",
                     alignItems: "center",
+                    height:"100%"
                   }}
                 >
                   <Autocomplete
@@ -294,8 +330,8 @@ export default function EventsAndSeminars({
                     <Button
                       variant="contained"
                       color="primary"
-                      sx={{ width: "120px", height: "40px" }}
-                      onClick={() => setEditContact(true)}
+                      sx={{ width: "120px", height: "100%" }}
+                      onClick={() => handleClickOpen()}
                     >
                       Edit
                     </Button>
@@ -303,9 +339,6 @@ export default function EventsAndSeminars({
                     ""
                   )} */}
                 </Box>
-                {/* <Box>{editContact === true ? <Box>
-                  
-                </Box> : <></>}</Box> */}
               </>
             )}
             <FormControlLabel
@@ -449,25 +482,10 @@ export default function EventsAndSeminars({
           >
             Register
           </Button>
-
-          <Link
-            href="https://tonybruce-furlongpainting.zohobookings.com/#/customer/4396739000000147014"
-            color="primary"
-            target="_blank"
-          >
-            Book a Meeting with Luke
-          </Link>
         </Box>
       </Box>
-      {/* <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleSnackbarClose}
-      >
-        <SnackAlert severity="success" sx={{ width: "100%" }}>
-          Contact Created Successfully
-        </SnackAlert>
-      </Snackbar> */}
+      <ContactUpdate open={open} handleClose={handleClose} selectedContact={selectedContact} />
+      <InviteSuccessPage open={openThankYou} paintingNeed={paintingNeed} />
     </Box>
   );
 }
