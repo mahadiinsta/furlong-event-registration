@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   FormControl,
   FormControlLabel,
   IconButton,
@@ -78,7 +79,7 @@ export default function EventsAndSeminars({
     setOpen(false);
   };
 
-  console.log({selectedAccount})
+  console.log({ selectedAccount });
 
   // Invite Successful
 
@@ -115,6 +116,7 @@ export default function EventsAndSeminars({
   };
 
   const handleCreateContact = async (account_id) => {
+    setLoading(true);
     const contactMap = {
       First_Name: firstName,
       Last_Name: lastName,
@@ -122,7 +124,9 @@ export default function EventsAndSeminars({
       Phone: number,
       Title: title,
       Account_Name:
-        newAccount === true ? account_id : selectedAccount?.Invited_Accounts?.id,
+        newAccount === true
+          ? account_id
+          : selectedAccount?.Invited_Accounts?.id,
     };
     const createResp = await axios.post("/api/CreateContact", contactMap);
 
@@ -130,7 +134,9 @@ export default function EventsAndSeminars({
       const createAttendeeMap = {
         Name: firstName + " " + lastName,
         Accounts:
-          newAccount === true ? account_id : selectedAccount?.Invited_Accounts?.id,
+          newAccount === true
+            ? account_id
+            : selectedAccount?.Invited_Accounts?.id,
         Event_Name: eventId,
         Attendee_Status: "Attended",
         Attendee_Title: title,
@@ -145,8 +151,9 @@ export default function EventsAndSeminars({
       const sendData = await axios.post(
         `/api/NewContactCount?recordId=${eventId}`
       );
-      console.log({sendData})
-      if(sendData.data.status === "success"){
+      console.log({ sendData });
+      setLoading(false);
+      if (sendData.data.status === "success") {
         setOpenThankYou(true);
       }
     }
@@ -159,6 +166,7 @@ export default function EventsAndSeminars({
 
   const handleCreateAccount = async (e) => {
     e.preventDefault();
+    setLoading(true)
     const accountMap = {
       EventID: eventId,
       Account_Name: accountName,
@@ -168,7 +176,7 @@ export default function EventsAndSeminars({
       accountMap
     );
 
-    alert(accountCreateResp?.data?.data?.data[0].status)
+    alert(accountCreateResp?.data?.data?.data[0].status);
 
     if (accountCreateResp?.data?.data?.data[0].status === "success") {
       const contactCreateResp = handleCreateContact(
@@ -206,318 +214,344 @@ export default function EventsAndSeminars({
   };
 
   const handleInvite = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+    setLoading(true);
     const relatedResp = await axios.post(
       "/api/setContactInvitationStatus?recordId=" + selectedContact?.id,
       { Note: note, Painting_Needs: paintingNeed }
     );
     if (relatedResp?.data?.status !== "error") {
-      alert("successfully atteneded");
       setOpenThankYou(true);
     } else {
       alert("Something is wrong with the details! Please try again");
       window.location.reload(false);
     }
+    setLoading(false);
   };
 
   return (
-    <Box component="form">
-      <AppBar position="static">
-        <Typography variant="h6" align="center" sx={{ pt: 2, pb: 2 }}>
-          Event Registration
-        </Typography>
-      </AppBar>
-      <Box
-        sx={{
-          maxWidth: 786,
-          minHeight: 700,
-          padding: 5,
-          margin: "0 auto",
-        }}
-      >
-        <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: "flex", justifyContent: "center", mb: 1 }}>
-            <Image src={logo} alt="logo" width={170} height={170} />
-          </Box>
-          <Typography
-            align="center"
-            variant="h6"
-            sx={{ mt: 5, fontWeight: "bold" }}
+    <>
+      {loading === false ? (
+        <Box component="form">
+          <AppBar position="static">
+            <Typography variant="h6" align="center" sx={{ pt: 2, pb: 2 }}>
+              Event Registration
+            </Typography>
+          </AppBar>
+          <Box
+            sx={{
+              maxWidth: 786,
+              minHeight: 700,
+              padding: 5,
+              margin: "0 auto",
+            }}
           >
-            Event Name:{" "}
-            {EventNameResp !== undefined && EventNameResp[0]?.Event_Name}
-          </Typography>
-        </Box>
-        {newAccount === false ? (
-          <>
-            {" "}
-            <label style={{ fontWeight: 500 }}>School Name</label>
-            <Autocomplete
-              sx={{ mt: 1, mb: 1 }}
-              disablePortal
-              onChange={(e, v) =>
-                v !== null ? handleSearch(v) : setSelectedAccount(null)
-              }
-              options={accounts}
-              getOptionLabel={(option) => option.Invited_Accounts.name}
-              renderInput={(params) => (
-                <TextField {...params} fullWidth placeholder="-Select-" />
-              )}
-            />
-          </>
-        ) : (
-          ""
-        )}
-        <FormControlLabel
-          sx={{ mt: 1, mb: 1 }}
-          control={
-            <Checkbox
-              size="small"
-              onChange={() => setNewAccount(!newAccount)}
-            />
-          }
-          label="Add School Name"
-        />
-
-        {newAccount === true ? (
-          <Box>
-            <Box sx={{ pb: 1 }}>
-              <label
-                style={{ fontWeight: 600, fontSize: 26, color: "#1565C0" }}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: "flex", justifyContent: "center", mb: 1 }}>
+                <Image src={logo} alt="logo" width={170} height={170} />
+              </Box>
+              <Typography
+                align="center"
+                variant="h6"
+                sx={{ mt: 5, fontWeight: "bold" }}
               >
-                Account
-              </label>
+                Event Name:{" "}
+                {EventNameResp !== undefined && EventNameResp[0]?.Event_Name}
+              </Typography>
             </Box>
-            <label style={{ fontWeight: 500 }}>School Name</label>
-            <br />
-            <TextField
-              fullWidth
-              sx={{ mt: 1, mb: 1 }}
-              onBlur={(e) => setAccountName(e.target.value)}
-              required
-            />
-          </Box>
-        ) : (
-          ""
-        )}
-
-        {newAccount === false ? (
-          <>
-            <br />
-
-            {newContact === false && (
+            {newAccount === false ? (
               <>
                 {" "}
-                <Box
-                  sx={{
-                    display: "flex",
-                    width: "100%",
-                    justifyContent: "space-around",
-                    alignItems: "center",
-                    height: "100%",
-                  }}
-                >
-                  <Autocomplete
-                    sx={{
-                      mt: 1,
-                      width: "100%",
-                      // width: `${selectedContact === "" ? "100%" : "80%"}`,
-                    }}
-                    disablePortal
-                    onChange={(e, v) => v !== null && setSelectedContact(v)}
-                    options={contacts}
-                    getOptionLabel={(option) => option?.Contacts?.name}
-                    renderInput={(params) => (
-                      <TextField {...params} fullWidth placeholder="-Select-" />
-                    )}
-                  />
-                  {/* {selectedContact !== "" ? (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      sx={{ width: "120px", height: "100%" }}
-                      onClick={() => handleClickOpen()}
-                    >
-                      Edit
-                    </Button>
-                  ) : (
-                    ""
-                  )} */}
-                </Box>
+                <label style={{ fontWeight: 500 }}>School Name</label>
+                <Autocomplete
+                  sx={{ mt: 1, mb: 1 }}
+                  disablePortal
+                  onChange={(e, v) =>
+                    v !== null ? handleSearch(v) : setSelectedAccount(null)
+                  }
+                  options={accounts}
+                  getOptionLabel={(option) => option.Invited_Accounts.name}
+                  renderInput={(params) => (
+                    <TextField {...params} fullWidth placeholder="-Select-" />
+                  )}
+                />
               </>
+            ) : (
+              ""
             )}
             <FormControlLabel
               sx={{ mt: 1, mb: 1 }}
               control={
                 <Checkbox
                   size="small"
-                  onChange={() => setNewContact(!newContact)}
+                  onChange={() => setNewAccount(!newAccount)}
                 />
               }
-              label="Add New Contact"
+              label="Add School Name"
             />
-          </>
-        ) : (
-          ""
-        )}
-        {newContact === true || newAccount == true ? (
-          <Box>
-            {newAccount == true && (
-              <Box sx={{ pb: 1 }}>
-                <label
-                  style={{ fontWeight: 600, fontSize: 26, color: "#1565C0" }}
-                >
-                  Contact
-                </label>
+
+            {newAccount === true ? (
+              <Box>
+                <Box sx={{ pb: 1 }}>
+                  <label
+                    style={{ fontWeight: 600, fontSize: 26, color: "#1565C0" }}
+                  >
+                    Account
+                  </label>
+                </Box>
+                <label style={{ fontWeight: 500 }}>School Name</label>
+                <br />
+                <TextField
+                  fullWidth
+                  sx={{ mt: 1, mb: 1 }}
+                  onBlur={(e) => setAccountName(e.target.value)}
+                  required
+                />
               </Box>
+            ) : (
+              ""
             )}
-            <Box>
-              <label style={{ fontWeight: 500 }}>First Name</label>
-              <br />
-              <TextField
-                fullWidth
-                sx={{ mt: 1, mb: 1 }}
-                onBlur={(e) => setFirstName(e.target.value)}
-                required
-              />
-            </Box>
-            <Box>
-              <label style={{ fontWeight: 500 }}>Last Name</label>
-              <br />
-              <TextField
-                fullWidth
-                sx={{ mt: 1, mb: 1 }}
-                onBlur={(e) => setLastName(e.target.value)}
-                required
-              />
-            </Box>
-            <Box>
-              <label style={{ fontWeight: 500 }}>Title</label>
-              <br />
-              <TextField
-                fullWidth
-                sx={{ mt: 1, mb: 1 }}
-                onBlur={(e) => setTitle(e.target.value)}
-              />
-            </Box>
-            <Box>
-              <label style={{ fontWeight: 500 }}>Email</label>
-              <br />
-              <TextField
-                sx={{ mt: 1, mb: 1 }}
-                onBlur={(e) => setEmail(e.target.value)}
-                fullWidth
-                required
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton edge="end">
-                      <EmailIcon />
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-            </Box>
-            <Box>
-              <label style={{ fontWeight: 500, marginBottom: 5 }}>Phone</label>
-              <br />
-              <PhoneInput
-                country={"au"}
-                value={number}
-                onChange={(phone) => setNumber(phone)}
-              />
+
+            {newAccount === false ? (
+              <>
+                <br />
+
+                {newContact === false && (
+                  <>
+                    {" "}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        width: "100%",
+                        justifyContent: "space-around",
+                        alignItems: "center",
+                        height: "100%",
+                      }}
+                    >
+                      <Autocomplete
+                        sx={{
+                          mt: 1,
+                          width: "100%",
+                          // width: `${selectedContact === "" ? "100%" : "80%"}`,
+                        }}
+                        disablePortal
+                        onChange={(e, v) => v !== null && setSelectedContact(v)}
+                        options={contacts}
+                        getOptionLabel={(option) => option?.Contacts?.name}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            fullWidth
+                            placeholder="-Select-"
+                          />
+                        )}
+                      />
+                      {/* {selectedContact !== "" ? (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ width: "120px", height: "100%" }}
+                    onClick={() => handleClickOpen()}
+                  >
+                    Edit
+                  </Button>
+                ) : (
+                  ""
+                )} */}
+                    </Box>
+                  </>
+                )}
+                <FormControlLabel
+                  sx={{ mt: 1, mb: 1 }}
+                  control={
+                    <Checkbox
+                      size="small"
+                      onChange={() => setNewContact(!newContact)}
+                    />
+                  }
+                  label="Add New Contact"
+                />
+              </>
+            ) : (
+              ""
+            )}
+            {newContact === true || newAccount == true ? (
+              <Box>
+                {newAccount == true && (
+                  <Box sx={{ pb: 1 }}>
+                    <label
+                      style={{
+                        fontWeight: 600,
+                        fontSize: 26,
+                        color: "#1565C0",
+                      }}
+                    >
+                      Contact
+                    </label>
+                  </Box>
+                )}
+                <Box>
+                  <label style={{ fontWeight: 500 }}>First Name</label>
+                  <br />
+                  <TextField
+                    fullWidth
+                    sx={{ mt: 1, mb: 1 }}
+                    onBlur={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                </Box>
+                <Box>
+                  <label style={{ fontWeight: 500 }}>Last Name</label>
+                  <br />
+                  <TextField
+                    fullWidth
+                    sx={{ mt: 1, mb: 1 }}
+                    onBlur={(e) => setLastName(e.target.value)}
+                    required
+                  />
+                </Box>
+                <Box>
+                  <label style={{ fontWeight: 500 }}>Title</label>
+                  <br />
+                  <TextField
+                    fullWidth
+                    sx={{ mt: 1, mb: 1 }}
+                    onBlur={(e) => setTitle(e.target.value)}
+                  />
+                </Box>
+                <Box>
+                  <label style={{ fontWeight: 500 }}>Email</label>
+                  <br />
+                  <TextField
+                    sx={{ mt: 1, mb: 1 }}
+                    onBlur={(e) => setEmail(e.target.value)}
+                    fullWidth
+                    required
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton edge="end">
+                          <EmailIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                  />
+                </Box>
+                <Box>
+                  <label style={{ fontWeight: 500, marginBottom: 5 }}>
+                    Phone
+                  </label>
+                  <br />
+                  <PhoneInput
+                    country={"au"}
+                    value={number}
+                    onChange={(phone) => setNumber(phone)}
+                  />
+                </Box>
+              </Box>
+            ) : (
+              ""
+            )}
+            <br />
+            <label style={{ fontWeight: 500 }}>
+              Does your school have a painting need that you would like to
+              discuss or have quoted?
+            </label>
+            <TextField
+              select
+              sx={{ mt: 2, mb: 1 }}
+              fullWidth
+              shrink={true}
+              notched
+              // label="Select"
+              placeholder="combo-box"
+              value={paintingNeed}
+              onChange={(e) => setPaintingNeed(e.target.value)}
+            >
+              {[
+                { label: "Yes", value: "Yes" },
+                { label: "No", value: "No" },
+                {
+                  label: "Unsure(But Open To conversation)",
+                  value: "Unsure(But Open To conversation)",
+                },
+              ].map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <label style={{ fontWeight: 500 }}>Note</label>
+            <TextField
+              sx={{ mt: 1, mb: 3 }}
+              multiline
+              fullWidth
+              rows={4}
+              onChange={(e) => setNote(e.target.value)}
+            />
+            <em style={{ fontWeight: 500 }}>
+              Thank you for taking the time to stop and chat, we will be in
+              contact soon!
+            </em>
+            <Box
+              sx={{
+                display: "flex",
+                juistifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {newAccount !== true && newContact === true ? (
+                <Button
+                  variant="contained"
+                  align="center"
+                  sx={{ margin: "20px auto 5px auto " }}
+                  onClick={(e) => handleRegister(e)}
+                  type="submit"
+                >
+                  New Contact Register
+                </Button>
+              ) : newAccount === true && newContact !== true ? (
+                <Button
+                  variant="contained"
+                  align="center"
+                  sx={{ margin: "20px auto 5px auto " }}
+                  onClick={(e) => handleRegister(e)}
+                  type="submit"
+                >
+                  New School Register
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  align="center"
+                  sx={{ margin: "20px auto 5px auto " }}
+                  onClick={(e) => handleInvite(e)}
+                  type="submit"
+                >
+                  Contact Attended
+                </Button>
+              )}
             </Box>
           </Box>
-        ) : (
-          ""
-        )}
-        <br />
-        <label style={{ fontWeight: 500 }}>
-          Does your school have a painting need that you would like to discuss
-          or have quoted?
-        </label>
-        <TextField
-          select
-          sx={{ mt: 2, mb: 1 }}
-          fullWidth
-          shrink={true}
-          notched
-          // label="Select"
-          placeholder="combo-box"
-          value={paintingNeed}
-          onChange={(e) => setPaintingNeed(e.target.value)}
-        >
-          {[
-            { label: "Yes", value: "Yes" },
-            { label: "No", value: "No" },
-            {
-              label: "Unsure(But Open To conversation)",
-              value: "Unsure(But Open To conversation)",
-            },
-          ].map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
-        <label style={{ fontWeight: 500 }}>Note</label>
-        <TextField
-          sx={{ mt: 1, mb: 3 }}
-          multiline
-          fullWidth
-          rows={4}
-          onChange={(e) => setNote(e.target.value)}
-        />
-        <em style={{ fontWeight: 500 }}>
-          Thank you for taking the time to stop and chat, we will be in contact
-          soon!
-        </em>
+          <ContactUpdate
+            open={open}
+            handleClose={handleClose}
+            selectedContact={selectedContact}
+          />
+          <InviteSuccessPage open={openThankYou} paintingNeed={paintingNeed} />
+        </Box>
+      ) : (
         <Box
           sx={{
             display: "flex",
-            juistifyContent: "center",
+            justifyContent: "center",
             alignItems: "center",
+            height: "100vh",
           }}
         >
-          {newAccount !== true && newContact === true ? (
-            <Button
-              variant="contained"
-              align="center"
-              sx={{ margin: "20px auto 5px auto " }}
-              onClick={(e) => handleRegister(e)}
-              type="submit"
-            >
-              New Contact Register
-            </Button>
-          ) : newAccount === true && newContact !== true ? (
-            <Button
-              variant="contained"
-              align="center"
-              sx={{ margin: "20px auto 5px auto " }}
-              onClick={(e) => handleRegister(e)}
-              type="submit"
-            >
-              New School Register
-            </Button>
-          ) : (
-            <Button
-              variant="contained"
-              align="center"
-              sx={{ margin: "20px auto 5px auto " }}
-              onClick={(e) => handleInvite(e)}
-              type="submit"
-            >
-              Contact Attended
-            </Button>
-          )}
+          <CircularProgress size={40} />
         </Box>
-      </Box>
-      <ContactUpdate
-        open={open}
-        handleClose={handleClose}
-        selectedContact={selectedContact}
-      />
-      <InviteSuccessPage open={openThankYou} paintingNeed={paintingNeed} />
-    </Box>
+      )}
+    </>
   );
 }
 
