@@ -29,7 +29,7 @@ import PhoneInput from "react-phone-input-2";
 import { Controller, useForm } from "react-hook-form";
 import MuiPhoneNumber from "mui-phone-number";
 import ContactUpdate from "../../components/ContactUpdate";
-import { useRouter } from 'next/router'
+import { useRouter } from "next/router";
 import InviteSuccessPage from "../../components/InviteSuccessPage";
 
 const SnackAlert = React.forwardRef(function Alert(props, ref) {
@@ -41,7 +41,7 @@ export default function EventsAndSeminars({
   EventID,
   EventNameResp,
 }) {
-  const [search, setSearch] = useState(null);
+  const [selectedAccount, setSelectedAccount] = useState(null);
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackBarOpen] = useState(false);
@@ -55,10 +55,10 @@ export default function EventsAndSeminars({
   const [note, setNote] = useState("");
   const [selectedContact, setSelectedContact] = useState("");
 
-  const router = useRouter()
+  const router = useRouter();
 
   const { id } = router.query;
-  
+
   const eventId = id;
 
   //for account
@@ -67,42 +67,48 @@ export default function EventsAndSeminars({
 
   const [editContact, setEditContact] = useState(false);
 
-      //contact update states
-      const [open, setOpen] = React.useState(false);
-  
-      const handleClickOpen = () => {
-        setOpen(true);
-      };
-    
-      const handleClose = () => {
-        setOpen(false);
-      };
+  //contact update states
+  const [open, setOpen] = React.useState(false);
 
-// Invite Successful
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
 
-const [openThankYou, setOpenThankYou] = React.useState(false);
+  const handleClose = () => {
+    setOpen(false);
+  };
 
+  console.log({selectedAccount})
+
+  // Invite Successful
+
+  const [openThankYou, setOpenThankYou] = React.useState(false);
 
   //Getting Contacts for Each School
 
   const handleSearch = async (account) => {
-    setLoading(true);
-    setSearch(account);
+    setSelectedAccount(account);
     const account_id = account.Invited_Accounts.id;
     const relatedResp = await axios.get(
       "/api/getRelatedData?accountId=" + account_id
     );
-    if (relatedResp?.data?.status !== "error" && relatedResp?.data?.data?.data.length > 0) {
-      const key = 'Name';
-      const arrayUniqueByKey = [...new Map(relatedResp?.data?.data?.data.map(item =>
-        [item[key], item])).values()];
-        console.log({arrayUniqueByKey})
-      setContacts(arrayUniqueByKey || []);
-      setLoading(false);
-    }
-    setLoading(false);
-  };
 
+    if (
+      relatedResp?.data?.status !== "error" &&
+      relatedResp.data.data !== "" &&
+      relatedResp?.data?.data?.data.length > 0
+    ) {
+      const key = "Name";
+      const arrayUniqueByKey = [
+        ...new Map(
+          relatedResp?.data?.data?.data.map((item) => [item[key], item])
+        ).values(),
+      ];
+      setContacts(arrayUniqueByKey || []);
+    } else {
+      setContacts([]);
+    }
+  };
 
   const handleSnackbarClose = () => {
     setSnackBarOpen(false);
@@ -116,7 +122,7 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
       Phone: number,
       Title: title,
       Account_Name:
-        newAccount === true ? account_id : search?.Invited_Accounts?.id,
+        newAccount === true ? account_id : selectedAccount?.Invited_Accounts?.id,
     };
     const createResp = await axios.post("/api/CreateContact", contactMap);
 
@@ -124,7 +130,7 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
       const createAttendeeMap = {
         Name: firstName + " " + lastName,
         Accounts:
-          newAccount === true ? account_id : search?.Invited_Accounts?.id,
+          newAccount === true ? account_id : selectedAccount?.Invited_Accounts?.id,
         Event_Name: eventId,
         Attendee_Status: "Attended",
         Attendee_Title: title,
@@ -139,7 +145,10 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
       const sendData = await axios.post(
         `/api/NewContactCount?recordId=${eventId}`
       );
-      return createResp?.data?.data?.data[0].status;
+      console.log({sendData})
+      if(sendData.data.status === "success"){
+        setOpenThankYou(true);
+      }
     }
 
     if (createResp?.data?.data?.data[0]?.status === "error") {
@@ -148,9 +157,8 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
     }
   };
 
-
-
-  const handleCreateAccount = async () => {
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
     const accountMap = {
       EventID: eventId,
       Account_Name: accountName,
@@ -164,7 +172,8 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
       const contactCreateResp = handleCreateContact(
         accountCreateResp.data?.data?.data[0].details.id
       );
-    }else{
+      setOpenThankYou(true);
+    } else {
       alert("Something went wrong");
       window.location.reload(false);
     }
@@ -179,12 +188,7 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
       lastName !== "" &&
       number !== ""
     ) {
-    const createResp = handleCreateContact();
-    if(createResp === "success"){
-      handleInvite();
-    }else{
-      alert("Something is wrong");
-    }
+      handleCreateContact();
     } else if (
       newContact === true &&
       (firstName === "" || lastName === "" || number === "")
@@ -195,25 +199,28 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
       newContact !== true &&
       (firstName !== "" || lastName !== "")
     ) {
-      handleCreateAccount();
-    } else {
-      handleInvite();
+      handleCreateAccount(e);
     }
   };
 
-  const handleInvite = async () => {
+  const handleInvite = async (e) => {
+    e.preventDefault()
     const relatedResp = await axios.post(
       "/api/setContactInvitationStatus?recordId=" + selectedContact?.id,
       { Note: note, Painting_Needs: paintingNeed }
     );
     if (relatedResp?.data?.status !== "error") {
       alert("successfully atteneded");
-      setOpenThankYou(true)
+      setOpenThankYou(true);
     } else {
       alert("Something is wrong with the details! Please try again");
       window.location.reload(false);
     }
   };
+
+  if (loading === true) {
+    return <Box>Loading..............</Box>;
+  }
 
   return (
     <Box component="form">
@@ -251,7 +258,7 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
               sx={{ mt: 1, mb: 1 }}
               disablePortal
               onChange={(e, v) =>
-                v !== null ? handleSearch(v) : setSearch(null)
+                v !== null ? handleSearch(v) : setSelectedAccount(null)
               }
               options={accounts}
               getOptionLabel={(option) => option.Invited_Accounts.name}
@@ -309,13 +316,13 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
                     width: "100%",
                     justifyContent: "space-around",
                     alignItems: "center",
-                    height:"100%"
+                    height: "100%",
                   }}
                 >
                   <Autocomplete
                     sx={{
                       mt: 1,
-                      width:"100%"
+                      width: "100%",
                       // width: `${selectedContact === "" ? "100%" : "80%"}`,
                     }}
                     disablePortal
@@ -473,18 +480,44 @@ const [openThankYou, setOpenThankYou] = React.useState(false);
             alignItems: "center",
           }}
         >
-          <Button
-            variant="contained"
-            align="center"
-            sx={{ margin: "20px auto 5px auto " }}
-            onClick={(e) => handleRegister(e)}
-            type="submit"
-          >
-            Register
-          </Button>
+          {newAccount !== true && newContact === true ? (
+            <Button
+              variant="contained"
+              align="center"
+              sx={{ margin: "20px auto 5px auto " }}
+              onClick={(e) => handleRegister(e)}
+              type="submit"
+            >
+              New Contact Register
+            </Button>
+          ) : newAccount === true && newContact !== true ? (
+            <Button
+              variant="contained"
+              align="center"
+              sx={{ margin: "20px auto 5px auto " }}
+              onClick={(e) => handleRegister(e)}
+              type="submit"
+            >
+              New School Register
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              align="center"
+              sx={{ margin: "20px auto 5px auto " }}
+              onClick={(e) => handleInvite(e)}
+              type="submit"
+            >
+              Contact Attended
+            </Button>
+          )}
         </Box>
       </Box>
-      <ContactUpdate open={open} handleClose={handleClose} selectedContact={selectedContact} />
+      <ContactUpdate
+        open={open}
+        handleClose={handleClose}
+        selectedContact={selectedContact}
+      />
       <InviteSuccessPage open={openThankYou} paintingNeed={paintingNeed} />
     </Box>
   );
