@@ -25,11 +25,11 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 export default function InviteSuccessPage({ open, paintingNeed }) {
   const router = useRouter()
 
-  // React.useEffect(() => {
-  //   setTimeout(() => {
-  //     router.reload(window.location.pathname)
-  //   },1000)
-  // },[])
+  React.useEffect(() => {
+    setTimeout(() => {
+      router.reload(window.location.pathname)
+    },3000)
+  },[])
 
   return (
     <div>
