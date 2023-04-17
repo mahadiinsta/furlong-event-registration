@@ -12,16 +12,25 @@ import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import Slide from "@mui/material/Slide";
 import { Box, DialogContent, Link } from "@mui/material";
+import { useRouter } from 'next/router'
 
 import success from "./welcome.png";
 import Image from "next/image";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
+  
 });
 
 export default function InviteSuccessPage({ open, paintingNeed }) {
-  console.log(paintingNeed);
+  const router = useRouter()
+
+  // React.useEffect(() => {
+  //   setTimeout(() => {
+  //     router.reload(window.location.pathname)
+  //   },1000)
+  // },[])
+
   return (
     <div>
       <Dialog fullScreen open={open} TransitionComponent={Transition}>
@@ -35,16 +44,6 @@ export default function InviteSuccessPage({ open, paintingNeed }) {
           }}
         >
           <Box>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                pb: 3,
-              }}
-            >
-              <Image src={success} height={300} width={300} alt="success" />
-            </Box>
             {paintingNeed === "Yes" ||
             paintingNeed === "Unsure(But Open To conversation)" ? (
               <>

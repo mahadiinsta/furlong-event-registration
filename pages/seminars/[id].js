@@ -79,7 +79,7 @@ export default function EventsAndSeminars({
     setOpen(false);
   };
 
-  console.log({ selectedAccount });
+  console.log({ EventNameResp });
 
   // Invite Successful
 
@@ -256,7 +256,7 @@ export default function EventsAndSeminars({
                 sx={{ mt: 5, fontWeight: "bold" }}
               >
                 Event Name:{" "}
-                {EventNameResp !== undefined && EventNameResp[0]?.Event_Name}
+                {EventNameResp !== undefined && EventNameResp[0]?.Name}
               </Typography>
             </Box>
             {newAccount === false ? (
@@ -527,7 +527,7 @@ export default function EventsAndSeminars({
                   onClick={(e) => handleInvite(e)}
                   type="submit"
                 >
-                  Contact Attended
+                  Register
                 </Button>
               )}
             </Box>
@@ -575,7 +575,10 @@ export async function getServerSideProps(context) {
     }
   );
 
-  if (!!eventsResp?.data?.data) {
+  
+
+  console.log("resp",EventNameResp )
+  if (!!EventNameResp?.data?.data) {
     const accounts = eventsResp.data.data;
 
     const strAscending = [...accounts].sort((a, b) =>
@@ -585,7 +588,7 @@ export async function getServerSideProps(context) {
       props: {
         accounts: strAscending,
         EventID: id,
-        EventNameResp: EventNameResp.data.data,
+        EventNameResp: EventNameResp?.data?.data,
       }, // will be passed to the page component as props
     };
   } else {
