@@ -12,7 +12,6 @@ import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import Slide from "@mui/material/Slide";
 import { Box, DialogContent, Link } from "@mui/material";
-import { useRouter } from 'next/router'
 
 import success from "./welcome.png";
 import Image from "next/image";
@@ -23,13 +22,6 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 export default function InviteSuccessPage({ open, paintingNeed }) {
-  const router = useRouter()
-
-  React.useEffect(() => {
-    setTimeout(() => {
-      router.reload(window.location.pathname)
-    },3000)
-  },[])
 
   return (
     <div>
