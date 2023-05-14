@@ -60,6 +60,7 @@ export default function EventsAndSeminars({
 
   const { id } = router.query;
 
+
   const eventId = id;
 
   //for account
@@ -221,13 +222,15 @@ export default function EventsAndSeminars({
       { Note: note, Painting_Needs: paintingNeed }
     );
     if (relatedResp?.data?.status !== "error") {
-      setOpenThankYou(true);
+      // setOpenThankYou(true);
+      router.push("/thankyoupage?paintingNeeds=" + paintingNeed + "&event_id=" + eventId)
     } else {
       alert("Something is wrong with the details! Please try again");
       window.location.reload(false);
     }
     setLoading(false);
   };
+
 
   return (
     <>
